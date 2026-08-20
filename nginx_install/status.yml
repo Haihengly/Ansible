@@ -1,6 +1,6 @@
 ---
 - name: Nginx
-  hosts: servers
+  hosts: server
   become: true
   tasks:
   - name: Verify Nginx
