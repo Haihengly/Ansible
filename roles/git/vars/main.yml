@@ -1,0 +1,8 @@
+#SPDX-License-Identifier: MIT-0
+---
+# vars file for git
+
+
+repo_url: "https://github.com/Haihengly/Dev-Service.git"
+branch: "dev"
+app_path: "/home/amhengly/react-app"

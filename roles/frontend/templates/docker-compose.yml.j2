@@ -1,0 +1,13 @@
+services:
+  frontend:
+    build: .
+    container_name: {{ project_name }}_frontend
+    ports:
+      - "{{ frontend_port }}:3000"
+    networks:
+      - {{ docker_network }}
+
+networks:
+  {{ docker_network }}:
+    external: true
+

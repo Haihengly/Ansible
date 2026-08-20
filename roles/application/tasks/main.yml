@@ -1,0 +1,60 @@
+---
+
+- name: Remove existing project folder if exists
+  file:
+    path: "{{ item.app_path }}"
+    state: absent
+  loop: "{{ services }}"
+  loop_control:
+    label: "{{ item.name }}"
+
+- name: Ensure project directories exist
+  file:
+    path: "{{ item.app_path }}"
+    state: directory
+  loop: "{{ services }}"
+  loop_control:
+    label: "{{ item.name }}"
+
+- name: Git clone repositories
+  git:
+    repo: "{{ item.repo_url }}"
+    dest: "{{ item.app_path }}"
+    version: "{{ item.branch }}"
+    force: yes
+  loop: "{{ services }}"
+  loop_control:
+    label: "{{ item.name }}"
+
+- name: Copy Dockerfile template
+  template:
+    src: "{{ item.dockerfile_template }}"
+    dest: "{{ item.app_path }}/Dockerfile"
+  loop: "{{ services }}"
+  loop_control:
+    label: "{{ item.name }}"
+
+- name: Copy docker-compose template
+  template:
+    src: docker-compose.yml.j2
+    dest: "/home/{{ ansible_user }}/{{ project_name }}/docker-compose.yml"
+  loop: "{{ services }}"
+  loop_control:
+    label: "{{ item.name }}"
+
+- name: Copy .env template if exists
+  template:
+    src: "{{ item.env_template }}"
+    dest: "{{ item.app_path }}/my-app/.env"
+  loop: "{{ services }}"
+  loop_control: 
+    label: "{{ item.name }}"
+  when: item.env_template is defined
+
+- name: Run service containers
+  community.docker.docker_compose_v2:
+    project_src: "/home/{{ ansible_user }}/{{ project_name }}"
+    state: present
+    recreate: always
+    build: always
+

@@ -1,0 +1,11 @@
+- import_tasks: create_users_ssh.yml
+  tags: create_user_ssh
+
+- import_tasks: add_ssh_keys.yml
+  tags: create_user_ssh
+
+- import_tasks: delete_users_ssh.yml
+  tags: delete_user_ssh
+
+- import_tasks: check_status_ssh.yml
+  tags: check_user_ssh  

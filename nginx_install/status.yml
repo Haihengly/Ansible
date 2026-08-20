@@ -1,0 +1,11 @@
+---
+- name: Nginx
+  hosts: servers
+  become: true
+  tasks:
+  - name: Verify Nginx
+    command: systemctl status nginx
+    register: result
+  - name: Output
+    debug:
+      msg: '{{ result.stdout_lines }}'

@@ -1,0 +1,4 @@
+- hosts: application
+  become: true
+  roles:
+    - application   

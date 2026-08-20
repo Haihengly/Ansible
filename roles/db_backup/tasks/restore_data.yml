@@ -1,0 +1,119 @@
+---
+# =====================================================
+# Playbook: Restore the latest compressed backup for each DB server
+# =====================================================
+
+- name: "Find all compressed backup files for this DB on master VM"
+  ansible.builtin.find:
+    paths: "{{ backup_path }}/{{ inventory_hostname }}_{{ db_name }}"
+    patterns: "*.sql.gz"
+    file_type: file
+  register: all_backups
+  delegate_to: localhost
+
+- name: "Select the latest backup file"
+  set_fact:
+    latest_backup: "{{ all_backups.files | sort(attribute='mtime') | last }}"
+  when: all_backups.files | length > 0
+
+- name: "Get size of the latest backup file (MB)"
+  ansible.builtin.stat:
+    path: "{{ latest_backup.path }}"
+  register: backup_file_stat
+  delegate_to: localhost
+  when: latest_backup is defined
+
+- name: "Copy latest backup file from master VM to DB server"
+  ansible.builtin.copy:
+    src: "{{ latest_backup.path }}"
+    dest: "/tmp/{{ db_name }}.sql.gz"
+  when: latest_backup is defined
+
+- name: "Ensure the database exists on the container"
+  ansible.builtin.shell: >
+    docker exec -i -e MYSQL_PWD={{ db_password }} {{ db_container_name }}
+    mysql -u {{ db_user }} -e "CREATE DATABASE IF NOT EXISTS {{ db_name }};"
+  args:
+    executable: /bin/bash
+  ignore_errors: yes
+
+- name: "Restore database from the latest compressed backup"
+  ansible.builtin.shell: >
+    zcat /tmp/{{ db_name }}.sql.gz | docker exec -i -e MYSQL_PWD={{ db_password }} {{ db_container_name }} mysql -u {{ db_user }} {{ db_name }}
+  args:
+    executable: /bin/bash
+  register: restore_result
+  ignore_errors: yes
+  when: latest_backup is defined
+
+- name: "Clean up temporary restore file on DB server"
+  ansible.builtin.file:
+    path: "/tmp/{{ db_name }}.sql.gz"
+    state: absent
+  when: latest_backup is defined
+
+- name: Notify Telegram about backup result
+  include_role:
+    name: telegram_notify
+  vars:
+    telegram_msg: |
+      --------------------------------------------------------------
+      🗂️ DataBase         : {{ db_name }}
+      📊 STATUS           : {{ (restore_result == 0) | ternary('BACKUP SUCCESS ✅','BACKUP FAILED ❌') }}
+      ⚙️ SERVER           : {{ inventory_hostname }}
+      --------------------------------------------------------------
+      📅 Date             : {{ ansible_date_time.date }}
+      🌓 Day              : {{ ansible_date_time.weekday }}
+      ⏰ Time             : {{ ansible_date_time.hour }}:{{ ansible_date_time.minute }}:{{ ansible_date_time.second }}
+      --------------------------------------------------------------
+      👤 PLAYBOOK RUN BY  : {{ ansible_user_id }}
+      🔗 RESTORE FILE  : {{ latest_backup.path if latest_backup is defined else 'N/A' }}
+      💾 FILE SIZE : > {% if backup_file_stat.stat.size / 1024 / 1024 < 1 %} {{ (backup_file_stat.stat.size / 1024) | round(2) }} KB
+          {% else %}
+            {{ (backup_file_stat.stat.size / 1024 / 1024) | round(2) }} MB
+          {% endif %}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# ---# - name: "Debug latest backup selection"
+#   ansible.builtin.debug:
+#     msg:
+#       - "all_backups" : "{{all_backups}}"
+#       - "Server: {{ inventory_hostname }}"
+#       - "Database: {{ db_name }}"
+#       - "Backup file: {{ latest_backup.path }}"
+
+# - name: Find all backup files
+#   ansible.builtin.find:
+#     paths: "{{ backup_path }}"
+#     patterns: "*.sql"
+#     file_type: file
+#   register: all_backups
+
+# - name: Get latest backup file
+#   set_fact:
+#     latest_backup: "{{ all_backups.files | sort(attribute='mtime') | last }}"
+
+# - name: Debug latest backup file
+#   ansible.builtin.debug:
+#     msg: "Latest backup file is {{ latest_backup.path }}"
+
+# - name: Restore database from latest backup
+#   ansible.builtin.shell: >
+#     cat {{ latest_backup.path }} | 
+#     docker exec -i -e MYSQL_PWD={{ db_root_password }} {{ db_container_name }} 
+#     mysql -u root {{ db_name }}
+#   args:
+#     executable: /bin/bash

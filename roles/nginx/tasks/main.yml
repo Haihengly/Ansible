@@ -1,0 +1,37 @@
+---
+- name: Install Nginx
+  apt:
+    name: nginx
+    state: present
+  become: yes
+
+- name: Install Certbot with Nginx plugin
+  apt:
+    name:
+      - certbot
+      - python3-certbot-nginx
+    state: present
+  become: yes
+
+- name: Deploy Nginx config from template
+  template:
+    src: nginx.conf.j2
+    dest: /etc/nginx/conf.d/{{ project_name }}.conf
+  notify: Reload Nginx
+  become: yes
+
+- name: Reload Nginx before SSL
+  service:
+    name: nginx
+    state: reloaded
+  become: yes
+
+- name: Obtain SSL certificate for hengly.online
+  command: certbot --nginx -d {{ app_domain_name }} --non-interactive --agree-tos -m henglyckl123@gmail.com
+  become: yes
+ 
+- name: Reload Nginx after SSL
+  service:
+    name: nginx
+    state: reloaded
+  become: yes

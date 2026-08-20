@@ -1,0 +1,42 @@
+#SPDX-License-Identifier: MIT-0
+---
+# tasks file for frontend
+
+- name: Ensure project directory exists
+  file:
+    path: "/home/{{ ansible_user }}/{{ project_name }}/frontend"
+    state: directory
+
+- name: Remove existing frontend folder if exists
+  file:
+    path: "/home/{{ ansible_user }}/{{ project_name }}/frontend"
+    state: absent
+
+- name: Git clone repository
+  git:
+    repo: "{{ repo_url }}"
+    dest: "/home/{{ ansible_user }}/{{ project_name }}/frontend"
+    version: "{{ branch }}"
+    force: yes
+
+- name: Render .env
+  template:
+    src: ".env.j2"
+    dest: "/home/{{ ansible_user }}/{{ project_name }}/frontend/my-app/.env"
+
+- name: Copy Dockerfile template
+  template:
+    src: Dockerfile.j2
+    dest: "/home/{{ ansible_user }}/{{ project_name }}/frontend/Dockerfile"
+
+- name: Copy docker-compose template
+  template:
+    src: docker-compose.yml.j2
+    dest: "/home/{{ ansible_user }}/{{ project_name }}/frontend/docker-compose.yml"
+
+- name: Run frontend container
+  community.docker.docker_compose_v2:
+    project_src: "/home/{{ ansible_user }}/{{ project_name }}/frontend"
+    state: present
+    recreate: always
+    build: always

@@ -1,0 +1,13 @@
+#SPDX-License-Identifier: MIT-0
+---
+# tasks file for build_image
+
+- name: Build Docker image
+  docker_image:
+    name: "{{ image_name }}"
+    tag: "{{ image_tag }}"
+    source: build
+    build:
+      path: "{{ app_path }}"
+    state: present
+ 

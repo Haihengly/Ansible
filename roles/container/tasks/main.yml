@@ -1,0 +1,17 @@
+#SPDX-License-Identifier: MIT-0
+---
+# tasks file for container
+
+- name: Stop old container if exists
+  docker_container:
+    name: "{{ container_name }}"
+    state: absent
+
+- name: Run new container
+  docker_container:
+    name: "{{ container_name }}"
+    image: "{{ image_name }}:{{ image_tag }}"
+    state: started
+    restart_policy: always
+    ports: 
+      - "{{ container_port }}:{{ container_port }}"

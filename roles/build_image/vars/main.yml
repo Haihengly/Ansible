@@ -1,0 +1,9 @@
+#SPDX-License-Identifier: MIT-0
+---
+# vars file for build_image
+
+image_name: "react-app"
+image_tag: "latest"
+app_path: "/home/amhengly/react-app/my-app"
+
+ 

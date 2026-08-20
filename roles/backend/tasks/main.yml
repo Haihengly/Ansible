@@ -1,0 +1,35 @@
+---
+
+- name: Ensure project directory exists
+  file:
+    path: "/home/{{ ansible_user }}/{{ project_name }}/backend"
+    state: directory
+
+- name: Remove existing backend folder if exists
+  file:
+    path: "/home/{{ ansible_user }}/{{ project_name }}/backend"
+    state: absent
+
+- name: Git clone repository
+  git:
+    repo: "{{ repo_url }}" 
+    dest: "/home/{{ ansible_user }}/{{ project_name }}/backend"
+    version: "{{ branch }}"
+    force: yes
+
+- name: Copy Dockerfile template
+  template:
+    src: Dockerfile.j2
+    dest: "/home/{{ ansible_user }}/{{ project_name }}/backend/Dockerfile"
+
+- name: Copy docker-compose template
+  template:
+    src: docker-compose.yml.j2
+    dest: "/home/{{ ansible_user }}/{{ project_name }}/backend/docker-compose.yml"
+
+- name: Run backend container
+  community.docker.docker_compose_v2:
+    project_src: "/home/{{ ansible_user }}/{{ project_name }}/backend"
+    state: present
+    recreate: always
+    build: always

@@ -1,0 +1,7 @@
+# roles/users/vars/users.yml
+---
+
+# users_ssh_list:
+#   - name: devuser
+#     pub_key: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBe8gPkuekvxyib63idAkjAWtLgWit1YamQA/ouZSQ8/ amhengly@LAPTOP-35MPQJ29"
+  

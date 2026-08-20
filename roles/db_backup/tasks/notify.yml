@@ -1,0 +1,18 @@
+- name: Notify Telegram about backup result
+  include_role:
+    name: telegram_notify
+  vars:
+    telegram_msg: |
+      --------------------------------------------------------------
+      🗂️ Database        : {{ db_name }} 
+      📊 Status          : {{ backup_status | trim }} {{ '✅' if backup_status | trim == 'BACKUP SUCCESS' else '❌' }}
+      ⚙️ Server          : {{ inventory_hostname }}
+      --------------------------------------------------------------
+      🌓 Day             : {{ ansible_date_time.weekday }}
+      📅 Date            : {{ ansible_date_time.date }}
+      ⏰ Time            : {{ ansible_date_time.hour }}:{{ ansible_date_time.minute }}:{{ ansible_date_time.second }}
+      --------------------------------------------------------------
+      👤 Run by          : {{ ansible_user_id }}
+      💾 File size       : {{ backup_size_display }}
+      📁 Backup file     : {{ backup_file_prefix }}.sql.gz
+ 

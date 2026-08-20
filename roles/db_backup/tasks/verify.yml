@@ -1,0 +1,39 @@
+
+- name: Stat backup file on DB VM
+  ansible.builtin.stat:
+    path: "{{ backup_tmp_dir }}/{{ backup_file_prefix }}.sql.gz"
+  register: db_backup_stat
+  # -----------------------------
+  # NOTE:
+  # Checks if the backup file exists and retrieves its metadata (size, permissions, etc.).
+  # Stored in 'db_backup_stat' for later use.
+  # -----------------------------
+
+- name: Calculate backup facts
+  ansible.builtin.set_fact:
+    backup_size_bytes: "{{ db_backup_stat.stat.size | default(0) }}"
+    backup_size_display: >-
+      {% if (db_backup_stat.stat.size | default(0)) < 1048576 %}
+        {{ ((db_backup_stat.stat.size | default(0)) / 1024) | round(2) }} KB
+      {% else %}
+        {{ ((db_backup_stat.stat.size | default(0)) / 1024 / 1024) | round(2) }} MB
+      {% endif %}
+    backup_status: >-
+      {% if db_dump.rc != 0 %}
+        BACKUP FAILED ❌
+      {% elif not db_backup_stat.stat.exists %}
+        BACKUP FAILED ❌
+      {% elif (db_backup_stat.stat.size | default(0)) < backup_min_size_bytes %}
+        BACKUP FAILED ❌
+      {% else %}
+        BACKUP SUCCESS ✅
+      {% endif %}
+  # -----------------------------
+  # NOTE:
+  # Calculates the backup file size in bytes and a human-readable format (KB/MB).
+  # Determines the backup status based on:
+  #   1. db_dump.rc → exit code of dump command
+  #   2. file existence
+  #   3. minimum file size
+  # The status includes emoji for success/fail.
+  # -----------------------------

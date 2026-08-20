@@ -1,0 +1,11 @@
+---
+
+- name: Create multiple users
+  user:
+    name: "{{ item.name }}"
+    password: "{{ item.password | password_hash('sha512') }}"
+    shell: /bin/bash
+    create_home: yes
+  loop: "{{ users_list }}"
+  register: result
+ 

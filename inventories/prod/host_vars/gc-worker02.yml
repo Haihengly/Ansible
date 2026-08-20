@@ -1,0 +1,12 @@
+db_root_password: "hengly168"
+db_name: "products02_db"
+db_user: "amhengly"        
+db_password: "amhengly168"
+db_host: "35.247.133.93" 
+backend_host: "35.247.133.93"
+  
+
+
+api_domain_name: "api.w2.hengly.online"
+app_domain_name: "app.w2.hengly.online"
+ 

@@ -1,0 +1,9 @@
+- hosts: k8s
+  become: true
+
+  vars:
+    docker_compose_version: "v2.22.0"
+
+  roles:
+    - docker
+  

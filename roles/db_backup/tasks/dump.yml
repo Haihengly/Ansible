@@ -1,0 +1,28 @@
+- name: Set backup timestamp
+  ansible.builtin.set_fact:
+    backup_file_prefix: "{{ ansible_date_time.iso8601_basic_short }}"
+  # -----------------------------
+  # NOTE:
+  # This sets a timestamp to use as the backup filename.
+  # Using 'iso8601_basic_short' gives a compact string like 20251219T170345
+  # which is unique and sortable by date.
+  # -----------------------------
+
+- name: Dump database and compress on DB VM
+  ansible.builtin.shell: >
+    docker exec -e MYSQL_PWD={{ db_root_password }} {{ db_container_name }}
+    mysqldump -u root {{ db_name }} | gzip
+    > {{ backup_tmp_dir }}/{{ backup_file_prefix }}.sql.gz
+  args:
+    executable: /bin/bash
+  register: db_dump
+  failed_when: false
+  changed_when: false
+  # -----------------------------
+  # NOTE:
+  # This runs a mysqldump inside the Docker container and compresses it with gzip.
+  # 'register: db_dump' stores the command result (exit code, stdout, stderr).
+  # 'failed_when: false' prevents Ansible from failing the playbook if the dump fails.
+  # 'changed_when: false' marks the task as "no changes" in Ansible, so it won't appear as changed.
+  # Later, you can manually check db_dump.rc to see if backup was successful.
+  # -----------------------------

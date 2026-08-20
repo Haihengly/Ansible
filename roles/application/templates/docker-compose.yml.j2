@@ -1,0 +1,28 @@
+version: "3.9"
+
+services:
+  backend:
+    build: ./backend
+    container_name: {{ project_name }}_backend
+    environment:
+      DB_HOST: {{ db_host }}
+      DB_PORT: {{ db_port }}
+      DB_USER: {{ db_user }}
+      DB_PASSWORD: {{ db_password }}
+      DB_NAME: {{ db_name }}
+    ports:
+      - "{{ backend_port }}:5000"
+    networks:
+      - {{ docker_network }}
+ 
+  frontend:
+    build: ./frontend
+    container_name: {{ project_name }}_frontend
+    ports:
+      - "{{ frontend_port }}:3000"
+    networks:
+      - {{ docker_network }}
+
+networks:
+  {{ docker_network }}:
+    external: true

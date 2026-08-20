@@ -1,0 +1,4 @@
+---
+
+backup_min_size_bytes: 50     # below this = failed
+backup_tmp_dir: /tmp

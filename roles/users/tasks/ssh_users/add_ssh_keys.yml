@@ -1,0 +1,20 @@
+# roles/users/tasks/add_ssh_keys.yml
+---
+
+- name: Create .ssh folder
+  file:
+    path: "/home/{{ item.name }}/.ssh"
+    state: directory
+    owner: "{{ item.name }}"
+    group: "{{ item.name }}"
+    mode: '0700' 
+  loop: "{{ users_ssh_list }}"
+
+- name: Add public key
+  copy:
+    content: "{{ item.pub_key }}"
+    dest: "/home/{{ item.name }}/.ssh/authorized_keys"
+    owner: "{{ item.name }}"
+    group: "{{ item.name }}"
+    mode: '0600'
+  loop: "{{ users_ssh_list }}"

@@ -1,0 +1,8 @@
+#SPDX-License-Identifier: MIT-0
+---
+# defaults file for telegram_notify
+
+telegram_bot_token: "8518781429:AAHlXg1o6LMpJ6tyGwuAjxwZjRWYnAmIHwQ"
+telegram_chat_id: "7845153640"
+telegram_msg: "Default message"
+ 

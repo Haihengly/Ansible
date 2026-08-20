@@ -1,0 +1,10 @@
+# #SPDX-License-Identifier: MIT-0
+# ---
+# # defaults file for users
+
+# users_list:
+#   - name: "user1"
+#     password: "user123"
+#   - name: "user2" 
+#     password: "user123"
+

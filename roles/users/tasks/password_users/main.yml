@@ -1,0 +1,10 @@
+---
+
+- import_tasks: create_users.yml
+  tags: create_user
+
+- import_tasks: check_success.yml
+  tags: check_user
+
+- import_tasks: delete_users.yml 
+  tags: delete_user

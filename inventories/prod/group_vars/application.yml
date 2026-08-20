@@ -1,0 +1,27 @@
+# Ports
+db_port: 3306
+backend_port: 5000 
+frontend_port: 3000
+
+
+# Project Info
+project_name: "My-App"
+services: 
+  - name: Backend
+    repo_url: "https://github.com/Haihengly/Ansible-Backend"
+    app_path: "/home/{{ ansible_user }}/{{ project_name }}/backend"
+    branch: "main"
+    dockerfile_template: "Dockerfile.backend.j2"
+
+  - name: Frontend
+    repo_url: "https://github.com/Haihengly/Dev-Service"
+    app_path: "/home/{{ ansible_user }}/{{ project_name }}/frontend"
+    branch: "dev"
+    dockerfile_template: "Dockerfile.frontend.j2"
+    env_template: ".env.j2" 
+
+
+# Database
+backup_path: "/Ansible/ansible/db_backup_data"
+db_container_name: "database"
+

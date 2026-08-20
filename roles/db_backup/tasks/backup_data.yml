@@ -1,0 +1,96 @@
+---
+
+- name: Ensure backup folder exists on master VM
+  ansible.builtin.file:
+    path: "{{ backup_path }}/{{ inventory_hostname }}_{{ db_name }}"
+    state: directory
+    owner: "{{ ansible_user }}"
+    mode: '0755'
+  delegate_to: localhost
+  become: false
+
+- name: Set backup timestamp
+  ansible.builtin.set_fact:
+    backup_file_prefix: "{{ ansible_date_time.date }}_{{ ansible_date_time.hour }}-{{ ansible_date_time.minute }}-{{ ansible_date_time.second }}"
+
+- name: Dump database and compress to tmp
+  ansible.builtin.shell: >
+    docker exec -e MYSQL_PWD={{ db_root_password }} {{ db_container_name }} \
+    mysqldump -u root {{ db_name }} | gzip > /tmp/{{ backup_file_prefix }}.sql.gz
+  args: 
+    executable: /bin/bash
+  register: db_dump
+  ignore_errors: yes
+
+- name: Verify backup file exists on DB VM
+  ansible.builtin.stat:
+    path: "/tmp/{{ backup_file_prefix }}.sql.gz"
+  register: backup_file_stat
+
+- name: Determine backup size in KB
+  ansible.builtin.set_fact:
+    backup_size_kb: "{{ (backup_file_stat.stat.size | default(0)) / 1024 }}"
+
+- name: Determine backup size display (KB or MB)
+  ansible.builtin.set_fact:
+    backup_size_display: >-
+      {% if backup_size_kb < 1024 %}
+        {{ backup_size_kb | round(2) }} KB
+      {% else %}
+        {{ (backup_size_kb / 1024) | round(2) }} MB
+      {% endif %}
+
+- name: Determine backup status safely
+  ansible.builtin.set_fact:
+    backup_status: >-
+      {% if db_dump is not defined or db_dump.rc != 0 %}
+        BACKUP FAILED ❌
+      {% elif not backup_file_stat.stat.exists or backup_file_stat.stat.size < 50 %}
+        BACKUP FAILED ❌
+      {% else %}
+        BACKUP SUCCESS ✅
+      {% endif %}
+
+
+- name: Fetch backup to master VM
+  ansible.builtin.fetch:
+    src: "/tmp/{{ backup_file_prefix }}.sql.gz"
+    dest: "{{ backup_path }}/{{ inventory_hostname }}_{{ db_name }}/"
+    flat: yes
+  when: backup_file_stat.stat.exists
+
+
+- name: Clean up tmp file on DB VM
+  ansible.builtin.file:
+    path: "/tmp/{{ backup_file_prefix }}.sql.gz"
+    state: absent
+
+- name: Get size of backup on master VM
+  ansible.builtin.stat:
+    path: "{{ backup_path }}/{{ inventory_hostname }}_{{ db_name }}/{{ backup_file_prefix }}.sql.gz"
+  register: backup_file_stat
+  delegate_to: localhost
+  become: false
+
+
+- name: Notify Telegram about backup result
+  include_role:
+    name: telegram_notify
+  vars:
+    telegram_msg: |
+      --------------------------------------------------------------
+      🗂️ DataBase         : {{ db_name }}
+      📊 STATUS           : {{ backup_status }}
+      ⚙️ SERVER           : {{ inventory_hostname }}
+      --------------------------------------------------------------
+      📅 Date             : {{ ansible_date_time.date }}
+      🌓 Day              : {{ ansible_date_time.weekday }}
+      ⏰ Time             : {{ ansible_date_time.hour }}:{{ ansible_date_time.minute }}:{{ ansible_date_time.second }}
+      --------------------------------------------------------------
+      👤 PLAYBOOK RUN BY  : {{ ansible_user_id }}
+      🔗 BACKUP FILE      : {{ backup_file_prefix }}.sql
+      💾 FILE SIZE : > {% if backup_file_stat.stat.size / 1024 / 1024 < 1 %} {{ (backup_file_stat.stat.size / 1024) | round(2) }} KB
+          {% else %}
+            {{ (backup_file_stat.stat.size / 1024 / 1024) | round(2) }} MB
+          {% endif %}
+

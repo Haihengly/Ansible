@@ -1,0 +1,10 @@
+---
+- name: Create users on servers
+  hosts: servers
+  become: true
+  vars_files:
+    - ../roles/users/vars/credentials.yml 
+
+  roles:
+    - users
+ 

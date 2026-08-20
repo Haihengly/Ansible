@@ -1,0 +1,11 @@
+# roles/users/tasks/create_users.yml
+---
+
+- name: Create system users
+  user:
+    name: "{{ item.name }}"
+    shell: /bin/bash
+    create_home: yes
+  loop: "{{ users_ssh_list }}"
+  no_log: true
+  

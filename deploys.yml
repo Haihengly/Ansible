@@ -1,0 +1,10 @@
+---
+- name: Deploy application
+  hosts: servers
+  become: true
+
+  roles:
+    - { role: git, tags: git }
+    - { role: build_image, tags: build_image }
+    - { role: container, tags: container }
+  

@@ -1,0 +1,9 @@
+---
+
+- name: Git clone repository
+  git:
+    repo: "{{ repo_url }}"
+    dest: "{{ app_path }}"
+    version: "{{ branch }}"
+    force: yes
+ 

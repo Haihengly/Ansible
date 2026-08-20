@@ -1,0 +1,15 @@
+---
+
+- name: Delete users that can SSH
+  ansible.builtin.user:
+    name: "{{ item.name }}"
+    state: absent
+    remove: yes    # removes home directory and .ssh keys
+  loop: "{{ users_ssh_list }}"
+  loop_control:
+    label: "{{ item.name }}"
+  register: user_delete_result
+  ignore_errors: yes
+
+
+ 

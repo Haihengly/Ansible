@@ -1,0 +1,21 @@
+# Check status of users
+- name: Check users status
+  ansible.builtin.command: "id {{ item.name }}"
+  loop: "{{ users_list }}"
+  register: user_check
+  ignore_errors: yes
+  failed_when: false
+  no_log: true
+
+- name: Show users status
+  ansible.builtin.debug:
+    msg: > 
+      {% if item.rc == 0 %}
+        User exists! ✅
+      {% else %}
+        User does not exist! ❌
+      {% endif %}
+  loop: "{{ user_check.results }}"
+  loop_control:
+    label: "{{ item.item.name }}"
+

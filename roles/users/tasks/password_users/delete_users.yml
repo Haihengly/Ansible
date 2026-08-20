@@ -1,0 +1,8 @@
+---
+- name: Delete multiple users
+  user:
+    name: "{{ item.name }}"
+    state: absent
+    remove: yes
+  loop: "{{ users_list }}"
+ 

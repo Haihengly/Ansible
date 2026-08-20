@@ -1,0 +1,13 @@
+---
+
+# - import_tasks : backup_data.yml
+#   tags: backup
+
+# - import_tasks : restore_data.yml
+#   tags: restore_data
+ 
+- import_tasks: dump.yml
+- import_tasks: verify.yml
+- import_tasks: fetch.yml
+- import_tasks: notify.yml
+ 

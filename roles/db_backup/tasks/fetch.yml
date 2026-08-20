@@ -1,0 +1,46 @@
+- name: Ensure backup folder exists on master VM
+  ansible.builtin.file:
+    path: "{{ backup_path }}/{{ inventory_hostname }}_{{ db_name }}"
+    state: directory
+    mode: '0755'
+  delegate_to: localhost
+  become: false
+  # -----------------------------
+  # NOTE:
+  # Ensures the backup folder exists on the master VM.
+  # 'delegate_to: localhost' means this task runs on the master VM instead of the DB server.
+  # 'state: directory' creates the folder if it doesn't exist.
+  # 'become: false' because we don't need sudo here.
+  # -----------------------------
+
+
+- name: Fetch backup to master VM
+  ansible.builtin.fetch:
+    src: "{{ backup_tmp_dir }}/{{ backup_file_prefix }}.sql.gz"
+    dest: "{{ backup_path }}/{{ inventory_hostname }}_{{ db_name }}/"
+    flat: yes
+  when: backup_status == 'BACKUP SUCCESS ✅'
+  # -----------------------------
+  # NOTE:
+  # Transfers the backup file from the DB VM to the master VM.
+  # Only runs if the backup was successful.
+  # 'flat: yes' keeps the filename the same without creating extra folders.
+  # -----------------------------
+
+- name: Cleanup temp backup on DB VM
+  ansible.builtin.file:
+    path: "{{ backup_tmp_dir }}/{{ backup_file_prefix }}.sql.gz"
+    state: absent
+  # -----------------------------
+  # NOTE:
+  # Deletes the temporary backup file from the DB VM after it has been fetched.
+  # 'state: absent' removes the file.
+  # -----------------------------
+
+
+- name: Debug backup status
+  ansible.builtin.debug:
+    msg:
+      - "backup_status={{ backup_status }}"
+      - "size={{ backup_size_bytes }}"
+      - "dump_rc={{ db_dump.rc }}"

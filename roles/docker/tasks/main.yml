@@ -1,0 +1,42 @@
+---
+- name: Install required packages for Docker
+  apt:
+    name:
+      - curl
+      - ca-certificates
+      - gnupg
+      - lsb-release
+    state: present
+    update_cache: yes
+
+- name: Install Docker using official convenience script
+  shell: curl -fsSL https://get.docker.com | sh
+  args:
+    executable: /bin/bash
+
+- name: Install Docker Compose
+  get_url:
+    url: "https://github.com/docker/compose/releases/download/{{ docker_compose_version }}/docker-compose-{{ ansible_system }}-{{ ansible_architecture }}"
+    dest: /usr/local/bin/docker-compose
+    mode: '0755'
+
+- name: Add current user to Docker group
+  user:
+    name: "{{ ansible_user | default(ansible_env.USER) }}"
+    groups: docker
+    append: yes
+
+- name: Ensure Docker service is running
+  service:
+    name: docker
+    state: started
+    enabled: yes
+
+- name: Test Docker installation
+  shell: docker run --rm hello-world
+  register: docker_test
+  ignore_errors: yes
+
+- name: Show Docker test result
+  debug:
+    var: docker_test.stdout

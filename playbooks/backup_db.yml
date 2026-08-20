@@ -1,0 +1,8 @@
+---
+- name: Backup database
+  hosts: application 
+  become: true
+
+  roles:
+    - db_backup
+      
