@@ -4,43 +4,43 @@
   become: yes
 
   vars:
-    app_name: "{{ app_name | default('myapp') }}"
-    app_tag: "{{ app_tag | default('latest') }}"
-    git_repo: "{{ git_repo | default('https://github.com/Haihengly/React-App.git') }}"
-    git_branch: "{{ git_branch | default('master') }}"
-    dest_path: "{{ dest_path | default('/app/frontend') }}"
-    host_port: "{{ host_port | default('8089') }}"
-    container_port: "{{ container_port | default('80') }}"
+    _app_name: "{{ app_name | default('myapp') }}"
+    _app_tag: "{{ app_tag | default('latest') }}"
+    _git_repo: "{{ git_repo | default('https://github.com/Haihengly/React-App.git') }}"
+    _git_branch: "{{ git_branch | default('main') }}"
+    _dest_path: "{{ dest_path | default('/app/frontend') }}"
+    _host_port: "{{ host_port | default('8089') }}"
+    _container_port: "{{ container_port | default('80') }}"
 
   tasks:
 
     - name: Pull latest app code from Git
       git:
-        repo: "{{ git_repo }}"
-        dest: "{{ dest_path }}"
-        version: "{{ git_branch }}"
+        repo: "{{ _git_repo }}"
+        dest: "{{ _dest_path }}"
+        version: "{{ _git_branch }}"
         force: yes
 
     - name: Build Docker image
       docker_image:
-        name: "{{ app_name }}"
-        tag: "{{ app_tag }}"
+        name: "{{ _app_name }}"
+        tag: "{{ _app_tag }}"
         build:
-          path: "{{ dest_path }}"
+          path: "{{ _dest_path }}"
         source: build
         force_source: yes
 
     - name: Remove old container
       docker_container:
-        name: "{{ app_name }}"
+        name: "{{ _app_name }}"
         state: absent
       ignore_errors: yes
 
     - name: Start new container
       docker_container:
-        name: "{{ app_name }}"
-        image: "{{ app_name }}:{{ app_tag }}"
+        name: "{{ _app_name }}"
+        image: "{{ _app_name }}:{{ _app_tag }}"
         state: started
         restart_policy: always
         ports:
-          - "{{ host_port }}:{{ container_port }}"
+          - "{{ _host_port }}:{{ _container_port }}"
