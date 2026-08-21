@@ -7,7 +7,7 @@
     _app_name: "{{ app_name | default('myapp') }}"
     _app_tag: "{{ app_tag | default('latest') }}"
     _git_repo: "{{ git_repo | default('https://github.com/Haihengly/React-App.git') }}"
-    _git_branch: "{{ git_branch | default('main') }}"
+    _git_branch: "{{ git_branch | default('master') }}"
     _dest_path: "{{ dest_path | default('/app/frontend') }}"
     _host_port: "{{ host_port | default('8089') }}"
     _container_port: "{{ container_port | default('80') }}"
@@ -44,3 +44,7 @@
         restart_policy: always
         ports:
           - "{{ _host_port }}:{{ _container_port }}"
+
+
+
+          
